@@ -254,8 +254,8 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: '100+', label: 'Mock Tests' },
-              { value: '10K+', label: 'Active Users' },
+              { value: 'Free', label: 'Mock Tests' },
+              { value: 'Instant', label: 'Band Score' },
               { value: '98%', label: 'Success Rate' },
               { value: '24/7', label: 'AI Feedback' },
             ].map((stat, index) => (
