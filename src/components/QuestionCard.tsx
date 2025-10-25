@@ -357,7 +357,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       )}
 
       <div className="mb-4">
-        <p className="text-gray-800 font-medium mb-4">{question.question}</p>
         {renderQuestion()}
       </div>
     </div>
