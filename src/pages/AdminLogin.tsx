@@ -168,10 +168,7 @@ const AdminLogin: React.FC = () => {
                 setError('');
                 setFormData({ name: '', email: '', password: '' });
               }}
-              className="font-medium text-gray-400 hover:text-gray-300 text-sm"
-            >
-              {isSignup ? 'Already have an admin account? Sign in' : 'Need to create an admin account? Sign up'}
-            </button>
+              
             
             <div>
               <Link to="/login" className="font-medium text-gray-400 hover:text-gray-300 text-sm">
