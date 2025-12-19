@@ -8,7 +8,7 @@ export interface User {
 export interface Question {
   id: string;
   section: 'reading' | 'listening' | 'writing' | 'speaking';
-  type: 'mcq' | 'fill-blank' | 'true-false' | 'essay';
+  type: 'mcq' | 'fill-blank' | 'true-false' | 'essay' | 'drag-drop';
   question: string;
   options?: string[];
   correctAnswer?: string | string[];
@@ -17,6 +17,7 @@ export interface Question {
   audioUrl?: string;
   imageUrl?: string;
   timeLimit?: number;
+  dragDropItems?: string[];
 }
 
 export interface Exam {
