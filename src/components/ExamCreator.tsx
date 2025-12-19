@@ -51,6 +51,10 @@ const ExamCreator: React.FC<ExamCreatorProps> = ({ onSave, onCancel, existingExa
       } else if (value === 'fill-blank') {
         updated[index].options = undefined;
         updated[index].correctAnswer = '';
+      } else if (value === 'drag-drop') {
+        updated[index].options = ['', '', '', '', '', ''];
+        updated[index].dragDropItems = ['', '', '', '', '', ''];
+        updated[index].correctAnswer = '';
       } else if (value === 'true-false') {
         updated[index].options = ['True', 'False'];
         updated[index].correctAnswer = '';
@@ -341,6 +345,7 @@ const ExamCreator: React.FC<ExamCreatorProps> = ({ onSave, onCancel, existingExa
           >
             <option value="mcq">Multiple Choice</option>
             <option value="fill-blank">Fill in the Blank</option>
+            <option value="drag-drop">Drag and Drop</option>
             <option value="true-false">True/False</option>
             {currentSection === 'writing' && <option value="essay">Essay</option>}
           </select>
@@ -442,6 +447,44 @@ const ExamCreator: React.FC<ExamCreatorProps> = ({ onSave, onCancel, existingExa
             <p className="text-sm text-gray-500 mt-1">
               Use _____ (5 underscores) in your question text to create blanks for students to fill
             </p>
+          </div>
+        )}
+
+        {question.type === 'drag-drop' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Drag & Drop Options (5-6 items)
+              </label>
+              <p className="text-sm text-gray-600 mb-3">
+                Use _____ (5 underscores) in your question text to create gaps. Create 5-6 options for students to drag and drop.
+              </p>
+              {question.options?.map((option, optIndex) => (
+                <div key={optIndex} className="flex items-center space-x-2 mb-3">
+                  <span className="text-sm text-gray-600 w-20">Option {optIndex + 1}:</span>
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => {
+                      const newOptions = [...(question.options || [])];
+                      newOptions[optIndex] = e.target.value;
+                      updateQuestion(index, 'options', newOptions);
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={`Enter option ${optIndex + 1}`}
+                  />
+                  <input
+                    type="radio"
+                    name={`drag_correct_${question.id}`}
+                    checked={question.correctAnswer === option}
+                    onChange={() => updateQuestion(index, 'correctAnswer', option)}
+                    className="h-4 w-4 text-blue-600"
+                    title="Mark as correct answer"
+                  />
+                  <span className="text-sm text-gray-600 w-16">Correct</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
