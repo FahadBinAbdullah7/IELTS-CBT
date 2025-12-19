@@ -1,42 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Question } from '../types';
 import { DatabaseService } from '../lib/database';
+import DragDropQuestion from './DragDropQuestion';
 
 interface QuestionCardProps {
   question: Question;
   answer: any;
   onAnswerChange: (questionId: string, answer: any) => void;
   questionNumber: number;
-  setIsMediaLoading: (loading: boolean) => void; // From ExamInterface
-  isMediaLoading: boolean; // From ExamInterface
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   answer,
   onAnswerChange,
-  questionNumber,
-  setIsMediaLoading,
+  questionNumber
 }) => {
   const [mediaUrls, setMediaUrls] = useState<{ [key: string]: string }>({});
-  const [isLoadingMedia, setIsLoadingMedia] = useState(false); // Added for loading indicator
 
   useEffect(() => {
     // Load media files from database
     const loadMediaFiles = async () => {
       const urls: { [key: string]: string } = {};
-      let hasMedia = false; // Track if media is present
-
-      // Start loading if audio or image is present
-      if (
-        (question.imageUrl && question.imageUrl.startsWith('media://')) ||
-        (question.audioUrl && question.audioUrl.startsWith('media://'))
-      ) {
-        setIsLoadingMedia(true);
-        setIsMediaLoading(true); // Update parent state
-        hasMedia = true;
-      }
-
+      
       if (question.imageUrl && question.imageUrl.startsWith('media://')) {
         const mediaId = question.imageUrl.replace('media://', '');
         try {
@@ -48,7 +34,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           console.error('Error loading image:', error);
         }
       }
-
+      
       if (question.audioUrl && question.audioUrl.startsWith('media://')) {
         const mediaId = question.audioUrl.replace('media://', '');
         try {
@@ -60,16 +46,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           console.error('Error loading audio:', error);
         }
       }
-
+      
       setMediaUrls(urls);
-      if (hasMedia) {
-        setIsLoadingMedia(false);
-        setIsMediaLoading(false); // Update parent state
-      }
     };
 
     loadMediaFiles();
-  }, [question.imageUrl, question.audioUrl, setIsMediaLoading]);
+  }, [question.imageUrl, question.audioUrl]);
 
   const handleAnswerChange = (newAnswer: any) => {
     onAnswerChange(question.id, newAnswer);
@@ -78,7 +60,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   const renderFillInTheBlank = () => {
     const questionText = question.question;
     const parts = questionText.split('_____');
-
+    
     if (parts.length === 1) {
       // No underscores found, show regular input
       return (
@@ -101,7 +83,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           {parts.map((part, index) => {
             // Calculate the current input value for this blank
             const currentInputAnswer = Array.isArray(answer) ? (answer[index] || '') : (index === 0 ? answer || '' : '');
-
+            
             return (
               <span key={index}>
                 {part}
@@ -209,6 +191,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         );
 
+      case 'drag-drop':
+        return (
+          <DragDropQuestion
+            question={question.question}
+            options={question.options || []}
+            answer={answer || {}}
+            onAnswerChange={handleAnswerChange}
+          />
+        );
+
       default:
         return null;
     }
@@ -234,129 +226,62 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       )}
 
-      {question.audioUrl && (
+      {question.audioUrl && mediaUrls[question.audioUrl] && (
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h4 className="font-medium text-blue-900 mb-3">🎧 Audio Recording:</h4>
-          {isLoadingMedia && !mediaUrls[question.audioUrl] ? (
-            <div className="flex items-center justify-center p-4 bg-white rounded border">
-              <div className="flex items-center space-x-2 text-blue-600">
-                <svg
-                  className="animate-spin h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                <span>Loading audio...</span>
-              </div>
-            </div>
-          ) : mediaUrls[question.audioUrl] ? (
-            <div className="bg-white p-3 rounded border">
-              <audio
-                controls
-                className="w-full"
-                preload="metadata"
-                controlsList="nodownload"
-              >
-                <source src={mediaUrls[question.audioUrl]} type="audio/mpeg" />
-                <source src={mediaUrls[question.audioUrl]} type="audio/wav" />
-                <source src={mediaUrls[question.audioUrl]} type="audio/ogg" />
-                <source src={mediaUrls[question.audioUrl]} type="audio/mp4" />
-                <source src={mediaUrls[question.audioUrl]} type="audio/webm" />
-                Your browser does not support the audio element. Please use a modern browser.
-              </audio>
-            </div>
-          ) : (
-            <div className="p-4 bg-red-50 rounded border border-red-200 text-red-600 text-center">
-              ⚠️ Audio could not be loaded. Please contact your instructor.
-            </div>
-          )}
-          {mediaUrls[question.audioUrl] && (
-            <div className="mt-2 text-sm text-blue-700 bg-blue-100 p-2 rounded">
-              <p className="font-medium">📝 Instructions:</p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>You can play this audio as many times as needed</li>
-                <li>Use the controls to pause, rewind, or replay</li>
-                <li>Listen carefully and answer the question below</li>
-              </ul>
-            </div>
-          )}
+          <div className="bg-white p-3 rounded border">
+            <audio 
+              controls 
+              className="w-full"
+              preload="metadata"
+              controlsList="nodownload"
+            >
+              <source src={mediaUrls[question.audioUrl]} type="audio/mpeg" />
+              <source src={mediaUrls[question.audioUrl]} type="audio/wav" />
+              <source src={mediaUrls[question.audioUrl]} type="audio/ogg" />
+              <source src={mediaUrls[question.audioUrl]} type="audio/mp4" />
+              <source src={mediaUrls[question.audioUrl]} type="audio/webm" />
+              Your browser does not support the audio element. Please use a modern browser.
+            </audio>
+          </div>
+          <div className="mt-2 text-sm text-blue-700 bg-blue-100 p-2 rounded">
+            <p className="font-medium">📝 Instructions:</p>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li>You can play this audio as many times as needed</li>
+              <li>Use the controls to pause, rewind, or replay</li>
+              <li>Listen carefully and answer the question below</li>
+            </ul>
+          </div>
         </div>
       )}
 
-      {question.imageUrl && (
+      {question.imageUrl && mediaUrls[question.imageUrl] && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <h4 className="font-medium text-gray-900 mb-3">📊 Reference Image:</h4>
-          {isLoadingMedia && !mediaUrls[question.imageUrl] ? (
-            <div className="flex items-center justify-center p-4 bg-white rounded border">
-              <div className="flex items-center space-x-2 text-gray-600">
-                <svg
-                  className="animate-spin h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                <span>Loading image...</span>
-              </div>
-            </div>
-          ) : mediaUrls[question.imageUrl] ? (
-            <div className="bg-white p-3 rounded border">
-              <img
-                src={mediaUrls[question.imageUrl]}
-                alt="Question reference material"
-                className="max-w-full h-auto mx-auto border border-gray-300 rounded shadow-sm"
-                style={{ maxHeight: '400px' }}
-                onError={(e) => {
-                  console.error('Image failed to load:', question.imageUrl);
-                  e.currentTarget.style.display = 'none';
-                  const errorDiv = document.createElement('div');
-                  errorDiv.className = 'text-red-600 text-center p-4 bg-red-50 rounded border border-red-200';
-                  errorDiv.innerHTML = '⚠️ Image could not be loaded. Please contact your instructor.';
-                  e.currentTarget.parentNode?.appendChild(errorDiv);
-                }}
-              />
-            </div>
-          ) : (
-            <div className="p-4 bg-red-50 rounded border border-red-200 text-red-600 text-center">
-              ⚠️ Image could not be loaded. Please contact your instructor.
-            </div>
-          )}
-          {mediaUrls[question.imageUrl] && (
-            <p className="text-sm text-gray-600 mt-2 text-center">
-              Study the image carefully before answering the question
-            </p>
-          )}
+          <div className="bg-white p-3 rounded border">
+            <img 
+              src={mediaUrls[question.imageUrl]} 
+              alt="Question reference material" 
+              className="max-w-full h-auto mx-auto border border-gray-300 rounded shadow-sm"
+              style={{ maxHeight: '400px' }}
+              onError={(e) => {
+                console.error('Image failed to load:', question.imageUrl);
+                e.currentTarget.style.display = 'none';
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-red-600 text-center p-4 bg-red-50 rounded border border-red-200';
+                errorDiv.innerHTML = '⚠️ Image could not be loaded. Please contact your instructor.';
+                e.currentTarget.parentNode?.appendChild(errorDiv);
+              }}
+            />
+          </div>
+          <p className="text-sm text-gray-600 mt-2 text-center">
+            Study the image carefully before answering the question
+          </p>
         </div>
       )}
 
       <div className="mb-4">
+        <p className="text-gray-800 font-medium mb-4">{question.question}</p>
         {renderQuestion()}
       </div>
     </div>
