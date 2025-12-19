@@ -8,19 +8,19 @@ export class ScoringSystem {
     questions.forEach(question => {
       total++;
       const userAnswer = answers[question.id];
-      
+
       if (question.type === 'mcq' && userAnswer === question.correctAnswer) {
         correct++;
       } else if (question.type === 'fill-blank') {
-        const correctAnswers = Array.isArray(question.correctAnswer) 
-          ? question.correctAnswer 
+        const correctAnswers = Array.isArray(question.correctAnswer)
+          ? question.correctAnswer
           : [question.correctAnswer];
-        
+
         // Handle case where userAnswer might be an array (multiple blanks)
         if (Array.isArray(userAnswer)) {
           // For array answers, we need to check if all blanks are correct
           if (userAnswer.length === correctAnswers.length) {
-            const allCorrect = userAnswer.every((answer, index) => 
+            const allCorrect = userAnswer.every((answer, index) =>
               correctAnswers[index]?.toLowerCase().trim() === answer?.toLowerCase().trim()
             );
             if (allCorrect) {
@@ -29,11 +29,16 @@ export class ScoringSystem {
           }
         } else if (typeof userAnswer === 'string') {
           // Handle single string answer
-          if (correctAnswers.some(ans => 
+          if (correctAnswers.some(ans =>
             ans?.toLowerCase().trim() === userAnswer?.toLowerCase().trim()
           )) {
             correct++;
           }
+        }
+      } else if (question.type === 'drag-drop') {
+        // For drag-drop, check if the answer matches the correct answer
+        if (userAnswer === question.correctAnswer) {
+          correct++;
         }
       } else if (question.type === 'true-false' && userAnswer === question.correctAnswer) {
         correct++;
